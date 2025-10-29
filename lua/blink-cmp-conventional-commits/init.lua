@@ -8,7 +8,8 @@ local conventional_commits = {}
 
 ---@param type string
 ---@param doc string
-local make_completion_item = function(type, doc)
+---@return blink.cmp.CompletionItem
+local function make_completion_item(type, doc)
     return {
         label = type,
         insertText = type,
@@ -56,6 +57,8 @@ function conventional_commits.new(opts)
 end
 
 ---@param context blink.cmp.Context
+---@param callback fun(T: table)
+---@return function|nil
 function conventional_commits:get_completions(context, callback)
     local row, col = unpack(context.cursor)
     if row ~= 1 or col > 8 then
