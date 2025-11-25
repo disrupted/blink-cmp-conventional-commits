@@ -62,11 +62,13 @@ end
 function conventional_commits:get_completions(context, callback)
     local row, col = unpack(context.cursor)
     if row ~= 1 or col > 8 then
+        callback()
         return -- only complete at beginning of the first line
     end
 
     local words = vim.split(context.line, ' ')
     if #words > 1 then
+        callback()
         return -- only complete the first word
     end
 
