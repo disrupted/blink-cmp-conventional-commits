@@ -56,29 +56,51 @@ function conventional_commits.new(opts)
     return setmetatable(opts, { __index = conventional_commits })
 end
 
+local function get_breaking_completion_item()
+    local breaking = make_completion_item(
+        'BREAKING CHANGE',
+        'Mark change as including a breaking change.'
+    )
+    local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]
+    if not first_line:match '!:' then
+        -- if '!' is missing then make sure to add it to the completion item
+        local colon_pos = first_line:find ':'
+        if colon_pos ~= nil then
+            breaking.additionalTextEdits = {
+                {
+                    range = {
+                        start = { line = 0, character = colon_pos - 1 },
+                        ['end'] = { line = 0, character = colon_pos - 1 },
+                    },
+                    newText = '!',
+                },
+            }
+        end
+    end
+    return breaking
+end
+
 ---@param context blink.cmp.Context
 ---@param callback fun(T: table)
 ---@return function|nil
 function conventional_commits:get_completions(context, callback)
     local row, col = unpack(context.cursor)
-    if row ~= 1 or col > 8 then
-        callback()
-        return -- only complete at beginning of the first line
+    local space_before_cursor = context.line:sub(0, col):find ' '
+    if row == 1 and not space_before_cursor then
+        -- Only complete conventional commits for first word of first line
+        callback {
+            is_incomplete_forward = false,
+            is_incomplete_backward = false,
+            items = vim.deepcopy(self.completion_items),
+        }
     end
-
-    local words = vim.split(context.line, ' ')
-    if #words > 1 then
-        callback()
-        return -- only complete the first word
+    if row > 1 and not space_before_cursor then
+        -- Add optional footers below
+        callback {
+            items = { get_breaking_completion_item() },
+        }
     end
-
-    callback {
-        is_incomplete_forward = false,
-        is_incomplete_backward = false,
-        items = self.completion_items,
-    }
-
-    return function() end
+    callback { items = {} }
 end
 
 return conventional_commits
