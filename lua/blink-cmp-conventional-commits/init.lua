@@ -86,19 +86,20 @@ end
 function conventional_commits:get_completions(context, callback)
     local row, col = unpack(context.cursor)
     local space_before_cursor = context.line:sub(0, col):find ' '
-    if row == 1 and not space_before_cursor then
-        -- Only complete conventional commits for first word of first line
-        callback {
-            is_incomplete_forward = false,
-            is_incomplete_backward = false,
-            items = vim.deepcopy(self.completion_items),
-        }
-    end
-    if row > 1 and not space_before_cursor then
-        -- Add optional footers below
-        callback {
-            items = { get_breaking_completion_item() },
-        }
+    if not space_before_cursor then
+        if row > 1 then
+            -- add optional footer below
+            callback {
+                items = { get_breaking_completion_item() },
+            }
+        elseif not context.line:find '[():]' then
+            -- only complete conventional commits for first word of first line before ':' and optional scope
+            callback {
+                is_incomplete_forward = false,
+                is_incomplete_backward = false,
+                items = vim.deepcopy(self.completion_items),
+            }
+        end
     end
     callback { items = {} }
 end
