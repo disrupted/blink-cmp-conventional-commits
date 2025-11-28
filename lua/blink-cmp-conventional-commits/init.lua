@@ -86,7 +86,7 @@ end
 function conventional_commits:get_completions(context, callback)
     local row, col = unpack(context.cursor)
     local line_before_cursor = context.line:sub(0, col)
-    local space_before_cursor = line_before_cursor:find ' '
+    local space_before_cursor = line_before_cursor:find '%s'
     if not space_before_cursor then
         if row > 1 then
             -- add optional footer below
