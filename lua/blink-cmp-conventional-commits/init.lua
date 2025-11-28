@@ -85,14 +85,15 @@ end
 ---@return function|nil
 function conventional_commits:get_completions(context, callback)
     local row, col = unpack(context.cursor)
-    local space_before_cursor = context.line:sub(0, col):find ' '
+    local line_before_cursor = context.line:sub(0, col)
+    local space_before_cursor = line_before_cursor:find ' '
     if not space_before_cursor then
         if row > 1 then
             -- add optional footer below
             callback {
                 items = { get_breaking_completion_item() },
             }
-        elseif not context.line:find '[():]' then
+        elseif not line_before_cursor:find '[():]' then
             -- only complete conventional commits for first word of first line before ':' and optional scope
             callback {
                 is_incomplete_forward = false,
