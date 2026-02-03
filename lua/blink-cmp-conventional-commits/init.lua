@@ -1,6 +1,15 @@
 ---@module 'blink.cmp'
 
+---@class blink-cmp-conventional-commits.CompletionItemInput
+---@field type string
+---@field doc? string
+
+---@class blink-cmp-conventional-commits.CompletionOptions
+---@field items? blink-cmp-conventional-commits.CompletionItemInput[]
+---@field use_defaults? boolean
+
 ---@class blink-cmp-conventional-commits.Options
+---@field completion? blink-cmp-conventional-commits.CompletionOptions
 
 ---@class ConventionalCommitsSource : blink.cmp.Source, blink-cmp-conventional-commits.Options
 ---@field completion_items blink.cmp.CompletionItem[]
@@ -18,41 +27,57 @@ local function make_completion_item(type, doc)
     }
 end
 
+local default_completion_items = {
+    make_completion_item('feat', 'A new feature for the user.'),
+    make_completion_item('fix', 'A bug fix for the user.'),
+    make_completion_item('docs', 'Documentation changes.'),
+    make_completion_item(
+        'style',
+        'Changes that do not affect the meaning of the code (white-space, formatting, etc.).'
+    ),
+    make_completion_item(
+        'refactor',
+        'A code change that neither fixes a bug nor adds a feature.'
+    ),
+    make_completion_item('perf', 'A code change that improves performance.'),
+    make_completion_item(
+        'test',
+        'Adding missing tests or correcting existing tests.'
+    ),
+    make_completion_item(
+        'chore',
+        'Changes to the build process or auxiliary tools and libraries.'
+    ),
+    make_completion_item('ci', 'Changes to CI/CD pipelines.'),
+    make_completion_item('revert', 'Reverts a specific commit.'),
+}
+
 ---@param opts blink-cmp-conventional-commits.Options
 function conventional_commits.new(opts)
-    ---@type blink-cmp-conventional-commits.Options
-    local default_opts = {}
+    opts = opts or {}
+    local completion = opts.completion or {}
+    local use_defaults = completion.use_defaults ~= false
+    local custom_items = completion.items or {}
 
-    opts = vim.tbl_deep_extend('keep', opts, default_opts, {
-        completion_items = {
-            make_completion_item('feat', 'A new feature for the user.'),
-            make_completion_item('fix', 'A bug fix for the user.'),
-            make_completion_item('docs', 'Documentation changes.'),
-            make_completion_item(
-                'style',
-                'Changes that do not affect the meaning of the code (white-space, formatting, etc.).'
-            ),
-            make_completion_item(
-                'refactor',
-                'A code change that neither fixes a bug nor adds a feature.'
-            ),
-            make_completion_item(
-                'perf',
-                'A code change that improves performance.'
-            ),
-            make_completion_item(
-                'test',
-                'Adding missing tests or correcting existing tests.'
-            ),
-            make_completion_item(
-                'chore',
-                'Changes to the build process or auxiliary tools and libraries.'
-            ),
-            make_completion_item('ci', 'Changes to CI/CD pipelines.'),
-            make_completion_item('revert', 'Reverts a specific commit.'),
-        },
-    })
+    local by_type = {}
+    if use_defaults then
+        for _, item in ipairs(default_completion_items) do
+            by_type[item.label] = item
+        end
+    end
+    for _, input in ipairs(custom_items) do
+        by_type[input.type] = make_completion_item(input.type, input.doc)
+    end
 
+    local completion_items = {}
+    for _, item in pairs(by_type) do
+        completion_items[#completion_items + 1] = item
+    end
+    table.sort(completion_items, function(a, b)
+        return a.label < b.label
+    end)
+
+    opts.completion_items = completion_items
     return setmetatable(opts, { __index = conventional_commits })
 end
 
