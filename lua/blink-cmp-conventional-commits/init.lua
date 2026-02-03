@@ -23,7 +23,10 @@ local function make_completion_item(type, doc)
         label = type,
         insertText = type,
         kind = require('blink.cmp.types').CompletionItemKind.Class,
-        documentation = doc,
+        documentation = {
+            kind = 'markdown',
+            value = doc,
+        },
     }
 end
 
