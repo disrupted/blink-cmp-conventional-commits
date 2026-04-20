@@ -43,6 +43,30 @@ example using [Lazy](https://github.com/folke/lazy.nvim) plugin manager
 }
 ```
 
+## Scope Completion
+
+The plugin automatically discovers scopes used in the repository by
+scanning recent non-merge commits. When you type `feat(` or any other
+type followed by an opening parenthesis, completions for previously
+used scopes will appear.
+
+Scopes are discovered at plugin load time from `git log`. The number
+of commits to scan can be configured via `git_log_count` (default: 200):
+
+```lua
+opts = {
+    git_log_count = 500, -- scan last 500 non-merge commits for scopes
+}
+```
+
+To disable scope completion entirely:
+
+```lua
+opts = {
+    scopes = false,
+}
+```
+
 ## Configuration
 
 The plugin provides several configuration options to customize the conventional commit types:
